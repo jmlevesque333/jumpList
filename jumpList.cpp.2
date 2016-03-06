@@ -5,6 +5,8 @@
 #include <sstream>
 #include <time.h>
 
+using namespace std;
+
 class node
 {
 public:
@@ -17,21 +19,22 @@ public:
 	int level;
 	int maxLevel;
 
-	node(int value, int level, int maxLevel,  node* back = NULL, node* front = NULL, node* up = NULL, node* down = NULL)
+	node(int value, int level, int maxLevel, node* back = NULL, node* front = NULL, node* down = NULL, node* up = NULL)
 	{
 		this->value = value;
 		this->level = level;
 		this->maxLevel = maxLevel;
+
 		this->up = up;
 		this->front = front;
 		this->down = down;
 		this->back = back;
 	}
-	node(){}
+	node() {}
 
 };
 
-class jumpList:public node
+class jumpList :public node
 {
 	node* root;
 	int maxLvlOfList;
@@ -46,14 +49,14 @@ class jumpList:public node
 
 	bool isEmpty()
 	{
-		if(root == NULL) return true;
+		if (root == NULL) return true;
 		return false;
 	}
 
 	int randomLevel(int maxLvl)
 	{
 		int random = 1;
-		while(rand()%2 ||random != maxLvl)
+		while (rand() % 2 || random != maxLvl)
 		{
 			random++;
 		}
@@ -62,63 +65,93 @@ class jumpList:public node
 
 	void add(int value)
 	{
-		if(isEmpty())
+		if (isEmpty())
 		{
 			int temp = randomLevel(maxLvlOfList);
 			root = new node(value, 1, temp);
 			node* ptr = root;
-			for(int i = 0; i < temp; i++)
+			for (int i = 0; i < temp; i++)
 			{
-				ptr->up = new node(value, (i+2), temp);
-				ptr->up->down = ptr->up;
+				ptr->up = new node(value, (i + 1), temp);
+				ptr->up->down = ptr;
 				ptr = ptr->up;
 			}
 		}
 		else
 		{
 			node* ptr = searchWhereToAdd(value, root);
-			if(ptr->front == NULL)
+			if (ptr->front == NULL)
 			{
 				int temp = randomLevel(maxLvlOfList);
-				while(ptr->down != NULL)
+				while (ptr->down != NULL)
 				{
 					ptr = ptr->down;
 				}
-				ptr->front = new node(value, 1, temp, ptr);
+				for (int i = 0; i < temp; i++)
+				{
+					while ((i + 1) != ptr->front->level || ptr->up == NULL)
+					{
+						ptr = ptr->up;
+					}
+					if (i > 0)
+					{
+
+					}
+					ptr->front = new node(value, (i + 1), temp, ptr);
+
+				}
+
+				/*ptr->front = new node(value, 1, temp, ptr, ptr->front);
 				ptr = ptr->front;
 				node* ptr2 = ptr;
-				for(int i = 0; i < temp; i++)
+				for (int i = 0; i < temp; i++)
 				{
-					while(ptr->back != NULL ||ptr->maxLevel < temp)
+					while (ptr->back != NULL || ptr->maxLevel < temp)
 					{
 						ptr = ptr->back;
 					}
-					if(ptr->back == NULL)
+					if (ptr->back == NULL)
 						ptr = NULL;
 					else
-						while(ptr->level != i)
+						while (ptr->level != i)
 						{
-							ptr=ptr->up;
+							ptr = ptr->up;
 						}
-					ptr2 ->up = new node(value, i+2, temp, ptr);
+					ptr2->up = new node(value, i + 1, temp, ptr);
 					ptr->front = ptr2->up;
-				}
+				}*/
 			}///// HERE ///
 			else
 			{
 				int temp = randomLevel(maxLvlOfList);
-				node* ptr2 = ptr;
-				for(int i =0; i<temp ; i++)
+				node* ptr2;
+				node* ptr3 = ptr;
+				for (int i = 0; i<temp; i++)
 				{
-					while((i+2) != ptr->front->level || ptr->up == NULL)
+					while ((i + 1) != ptr->front->level || ptr->up == NULL)
 					{
 						ptr = ptr->up;
 					}
-					ptr2->front = new node(value, (i+2), temp, ptr->front, ptr);
-					ptr2->front->back = ptr2->front;
+					while ((i + 1) > ptr3->back->maxLevel || ptr3->back != NULL)
+					{
+						ptr3 = ptr3->back;
+					}
+					if (i>0)
+					{
+						ptr2 = ptr;
+						ptr->front = new node(value, (i + 1), temp, ptr, ptr->front, ptr->down->front);
+						ptr->front->front->back = ptr->front;
+
+					}
+					else
+					{
+						ptr2 = ptr;
+						ptr->front = new node(value, (i + 1), temp, ptr, ptr->front);
+						ptr->front->front->back = ptr->front;
+					}
+					
 
 				}
-
 			}
 		}
 	}
@@ -126,51 +159,53 @@ class jumpList:public node
 	node* searchWhereToAdd(int value, node* temp, bool flag = false) // recursif
 	{
 		node* ptr = temp;
-		while(ptr->up != NULL || flag != true)
+		while (ptr->up != NULL || flag != true)
 		{
 			ptr = ptr->up;
 		}
-		if(ptr->front != NULL)
+		if (ptr->front != NULL)
 		{
-			if((ptr->down != NULL ) || (ptr->value <= ptr->front->value))
+			if ((ptr->down != NULL) || (ptr->value <= ptr->front->value))
 				searchWhereToAdd(value, ptr->down, true);
 			else
 			{
-				if(ptr->value > ptr->front->value)
+				if (ptr->value > ptr->front->value)
 					searchWhereToAdd(value, ptr->front);
+			}
+			return ptr;
 		}
-		return ptr;
-	}
 
+	}
 	bool search(int value, node* temp, bool flag = false) // recursif
 	{
 		node* ptr = temp;
-		while(ptr->up != NULL || flag != true)
+		while (ptr->up != NULL || flag != true)
 		{
 			ptr = ptr->up;
-			
+
 		}
-		if(ptr->value == value)
+		if (ptr->value == value)
 			return true;
 		else
 		{
-			
-			if((ptr->down != NULL ) || (ptr->value < ptr->front->value))
+
+			if ((ptr->down != NULL) || (ptr->value < ptr->front->value))
 				search(value, ptr->down, true);
 			else
 			{
-				if((ptr->front != NULL) || (ptr->value > ptr->front->value))
+				if ((ptr->front != NULL) || (ptr->value > ptr->front->value))
 					search(value, ptr->front);
 			}
 			return false;
 		}
-		
+
 	}
 
-};
+	};
 
-int main()
-{
-	srand(time(NULL));
-	return 0;
-}
+	int main()
+	{
+		srand(time(NULL));
+
+		return 0;
+	}
